@@ -35,6 +35,9 @@ public class Main extends Application {
     private TargetDataLine recordingLine;
     private boolean isRecording = false;
 
+    // Profile / Avatars
+    private ImageView profileAvatarView;
+
     @Override
     public void start(Stage primaryStage) {
         root = new BorderPane();
@@ -378,14 +381,122 @@ public class Main extends Application {
         profileLayout.setPadding(new Insets(10));
 
         Label avatarLabel = new Label("Your Avatar:");
-        ImageView avatar = new ImageView(new Image("https://via.placeholder.com/100"));
-        avatar.setFitWidth(100);
-        avatar.setFitHeight(100);
+        profileAvatarView = new ImageView();
+        profileAvatarView.setFitWidth(100);
+        profileAvatarView.setFitHeight(100);
+        profileAvatarView.setPreserveRatio(true);
+        profileAvatarView.setSmooth(true);
+
+        // Load avatars from assets and apply background removal
+        File assetsDir = new File("/Users/Arka/English-Project-1/Project-Alpha/assets");
+        List<File> avatarFiles = new ArrayList<>();
+        if (assetsDir.isDirectory()) {
+            File[] imgs = assetsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png"));
+            if (imgs != null) avatarFiles.addAll(Arrays.asList(imgs));
+        }
+        avatarFiles.sort(Comparator.comparing(File::getName));
+
+        FlowPane gallery = new FlowPane();
+        gallery.setHgap(8);
+        gallery.setVgap(8);
+
+        for (File f : avatarFiles) {
+            Image processed = loadAndRemoveBackground(f);
+            ImageView thumb = new ImageView(processed);
+            thumb.setFitWidth(60);
+            thumb.setFitHeight(60);
+            thumb.setPreserveRatio(true);
+            thumb.setSmooth(true);
+            thumb.setStyle("-fx-cursor: hand;");
+            thumb.setOnMouseClicked(e -> profileAvatarView.setImage(processed));
+            gallery.getChildren().add(thumb);
+        }
+
+        // Set a default avatar if available
+        if (!avatarFiles.isEmpty()) {
+            profileAvatarView.setImage(loadAndRemoveBackground(avatarFiles.get(0)));
+        } else {
+            profileAvatarView.setImage(new Image("https://via.placeholder.com/100"));
+        }
 
         Button changeAvatarBtn = new Button("Change Avatar");
+        changeAvatarBtn.setOnAction(e -> {
+            // Cycle through available avatars
+            if (avatarFiles.isEmpty()) return;
+            Image current = profileAvatarView.getImage();
+            int idx = -1;
+            for (int i = 0; i < avatarFiles.size(); i++) {
+                Image img = loadAndRemoveBackground(avatarFiles.get(i));
+                if (img.equals(current)) { idx = i; break; }
+            }
+            int next = (idx + 1) % avatarFiles.size();
+            profileAvatarView.setImage(loadAndRemoveBackground(avatarFiles.get(next)));
+        });
 
-        profileLayout.getChildren().addAll(avatarLabel, avatar, changeAvatarBtn);
+        ScrollPane galleryScroll = new ScrollPane(gallery);
+        galleryScroll.setFitToWidth(true);
+        galleryScroll.setPrefViewportHeight(150);
+
+        profileLayout.getChildren().addAll(avatarLabel, profileAvatarView, new Label("Choose from assets:"), galleryScroll, changeAvatarBtn);
         root.setCenter(profileLayout);
+    }
+
+    private Image loadAndRemoveBackground(File file) {
+        try (InputStream in = new FileInputStream(file)) {
+            Image image = new Image(in);
+            return chromaKeyRemove(image);
+        } catch (IOException e) {
+            return new Image("https://via.placeholder.com/100");
+        }
+    }
+
+    // Simple chroma-key using average of the four corner pixels as background color
+    private Image chromaKeyRemove(Image source) {
+        int width = (int) Math.max(1, source.getWidth());
+        int height = (int) Math.max(1, source.getHeight());
+        javafx.scene.image.WritableImage out = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelReader pr = source.getPixelReader();
+        javafx.scene.image.PixelWriter pw = out.getPixelWriter();
+        if (pr == null) return source;
+
+        // Sample corners
+        int[] cx = {0, width - 1, 0, width - 1};
+        int[] cy = {0, 0, height - 1, height - 1};
+        double br = 0, bg = 0, bb = 0;
+        for (int i = 0; i < 4; i++) {
+            int x = Math.max(0, cx[i]);
+            int y = Math.max(0, cy[i]);
+            int argb = pr.getArgb(x, y);
+            br += ((argb >> 16) & 0xFF);
+            bg += ((argb >> 8) & 0xFF);
+            bb += (argb & 0xFF);
+        }
+        br /= 4.0; bg /= 4.0; bb /= 4.0;
+
+        double threshold = 40.0; // tolerance
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int argb = pr.getArgb(x, y);
+                int a = (argb >> 24) & 0xFF;
+                int r = (argb >> 16) & 0xFF;
+                int g = (argb >> 8) & 0xFF;
+                int b = argb & 0xFF;
+
+                double dr = r - br;
+                double dg = g - bg;
+                double db = b - bb;
+                double distance = Math.sqrt(dr * dr + dg * dg + db * db);
+
+                int newA = a;
+                if (distance < threshold) {
+                    newA = 0; // make background transparent
+                }
+                int newArgb = (newA << 24) | (r << 16) | (g << 8) | b;
+                pw.setArgb(x, y, newArgb);
+            }
+        }
+        return out;
     }
 
     // Settings Page
