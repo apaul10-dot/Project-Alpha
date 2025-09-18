@@ -12,13 +12,13 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class EnhancedChatServer {
+public class FinalChatServer {
     private static final int WEB_PORT = 3000;
     private static final List<PrintWriter> sseClients = new CopyOnWriteArrayList<>();
     private static final List<String> messageHistory = new CopyOnWriteArrayList<>();
-    private static final Map<String, String> userProfiles = new HashMap<>(); // sessionId -> avatar
+    private static final Map<String, String> userProfiles = new HashMap<>();
     private static ServerSocket httpServerSocket;
-    private static final String NETWORK_IP = "10.0.0.95"; // Your actual network IP
+    private static final String NETWORK_IP = "10.0.0.95";
     
     // Settings
     private static boolean darkMode = true;
@@ -27,24 +27,18 @@ public class EnhancedChatServer {
     private static String fontSize = "medium";
 
     public static void main(String[] args) {
-        System.out.println("🚀 Starting Enhanced LAN Chat Server...");
+        System.out.println("Starting Final LAN Chat Server...");
         
         String url = "http://" + NETWORK_IP + ":" + WEB_PORT + "/";
-        System.out.println("📱 PHONE CONNECTION OPTIONS:");
-        System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        System.out.println("1️⃣ Direct URL: " + url);
-        System.out.println("2️⃣ QR Code: " + url + "qr");
-        System.out.println("3️⃣ Connection Helper: " + url + "connect");
-        System.out.println("4️⃣ Profile Setup: " + url + "profile");
-        System.out.println("5️⃣ Settings: " + url + "settings");
-        System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        System.out.println("💬 Messages will appear here when sent from phone");
-        System.out.println("📋 Copy any URL above to your phone");
+        System.out.println("PHONE CONNECTION OPTIONS:");
+        System.out.println("1. Direct URL: " + url);
+        System.out.println("2. Connection Helper: " + url + "connect");
+        System.out.println("3. Profile Setup: " + url + "profile");
+        System.out.println("4. Settings: " + url + "settings");
+        System.out.println("Messages will appear here when sent from phone");
         
-        // Start HTTP server
         startHttpServer();
         
-        // Keep the main thread alive
         try {
             Thread.currentThread().join();
         } catch (InterruptedException e) {
@@ -63,14 +57,14 @@ public class EnhancedChatServer {
         Thread serverThread = new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(WEB_PORT)) {
                 httpServerSocket = serverSocket;
-                System.out.println("✅ Server running on port " + WEB_PORT);
+                System.out.println("Server running on port " + WEB_PORT);
                 
                 while (true) {
                     Socket client = serverSocket.accept();
                     new Thread(() -> handleHttpConnection(client), "http-" + client.getPort()).start();
                 }
             } catch (IOException e) {
-                System.err.println("❌ HTTP server error: " + e.getMessage());
+                System.err.println("HTTP server error: " + e.getMessage());
             }
         }, "http-server");
         serverThread.setDaemon(true);
@@ -82,7 +76,6 @@ public class EnhancedChatServer {
              OutputStream rawOut = socket.getOutputStream();
              PrintWriter out = new PrintWriter(new OutputStreamWriter(rawOut, StandardCharsets.UTF_8), true)) {
 
-            // Read request line and headers
             List<String> headers = new ArrayList<>();
             String requestLine = readLine(in);
             if (requestLine == null || requestLine.isEmpty()) return;
@@ -138,8 +131,6 @@ public class EnhancedChatServer {
                 }
             } else if ("GET".equals(method) && "/health".equals(path)) {
                 writeText(out, 200, "OK", "text/plain", "ok");
-            } else if ("GET".equals(method) && "/qr".equals(path)) {
-                serveQRCode(out);
             } else if ("GET".equals(method) && "/connect".equals(path)) {
                 serveConnectionHelper(out);
             } else if ("GET".equals(method) && "/profile".equals(path)) {
@@ -222,7 +213,7 @@ public class EnhancedChatServer {
                 ".current-avatar{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block}" +
                 "</style></head><body>" +
                 "<div class=\"container\">" +
-                "<h1>👤 Choose Your Profile</h1>" +
+                "<h1>Choose Your Profile</h1>" +
                 
                 "<div class=\"current-profile\">" +
                 "<div id=\"currentAvatar\" class=\"current-avatar\" style=\"background:#334155;display:flex;align-items:center;justify-content:center;color:#94a3b8;\">No Avatar</div>" +
@@ -247,7 +238,6 @@ public class EnhancedChatServer {
                 "  document.getElementById('currentName').textContent = avatarName;" +
                 "  document.getElementById('saveProfile').disabled = false;" +
                 "  " +
-                "  // Update visual selection" +
                 "  document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));" +
                 "  event.target.closest('.avatar-option').classList.add('selected');" +
                 "}" +
@@ -265,6 +255,7 @@ public class EnhancedChatServer {
                 "  }).then(response => response.json())" +
                 "    .then(data => {" +
                 "      if (data.success) {" +
+                "        localStorage.setItem('userAvatar', selectedAvatar);" +
                 "        alert('Profile saved! Your avatar will appear in chat messages.');" +
                 "        window.location.href = '/';" +
                 "      } else {" +
@@ -298,10 +289,10 @@ public class EnhancedChatServer {
                 ".status{text-align:center;margin:20px 0;padding:10px;background:#059669;border-radius:8px;display:none}" +
                 "</style></head><body>" +
                 "<div class=\"container\">" +
-                "<h1>⚙️ Settings</h1>" +
+                "<h1>Settings</h1>" +
                 
                 "<div class=\"setting-group\">" +
-                "<h3>🎨 Appearance</h3>" +
+                "<h3>Appearance</h3>" +
                 "<div class=\"setting-item\">" +
                 "<div class=\"setting-label\">Dark Mode</div>" +
                 "<div class=\"toggle active\" id=\"darkModeToggle\" onclick=\"toggleSetting('darkMode')\"></div>" +
@@ -317,7 +308,7 @@ public class EnhancedChatServer {
                 "</div>" +
                 
                 "<div class=\"setting-group\">" +
-                "<h3>�� Audio</h3>" +
+                "<h3>Audio</h3>" +
                 "<div class=\"setting-item\">" +
                 "<div class=\"setting-label\">Sound Effects</div>" +
                 "<div class=\"toggle active\" id=\"soundToggle\" onclick=\"toggleSetting('soundEnabled')\"></div>" +
@@ -325,7 +316,7 @@ public class EnhancedChatServer {
                 "</div>" +
                 
                 "<div class=\"setting-group\">" +
-                "<h3>📱 Notifications</h3>" +
+                "<h3>Notifications</h3>" +
                 "<div class=\"setting-item\">" +
                 "<div class=\"setting-label\">Push Notifications</div>" +
                 "<div class=\"toggle active\" id=\"notificationsToggle\" onclick=\"toggleSetting('notificationsEnabled')\"></div>" +
@@ -390,14 +381,16 @@ public class EnhancedChatServer {
             "Variable Vulture", "Loop Lemur", "Array Armadillo", "String Squirrel", "Object Octopus"
         };
         
+        int nameIndex = 0;
         for (int i = 2; i <= 22; i++) {
-            if (i == 3) continue; // Skip avatar_3 as it doesn't exist
+            if (i == 3) continue;
             String avatarId = "avatar_" + i;
-            String avatarName = avatarNames[i - 2];
+            String avatarName = avatarNames[nameIndex];
             options.append("<div class=\"avatar-option\" onclick=\"selectAvatar('").append(avatarId).append("', '").append(avatarName).append("')\">");
             options.append("<img src=\"/assets/").append(avatarId).append(".jpg\" class=\"avatar-img\" />");
             options.append("<div class=\"avatar-name\">").append(avatarName).append("</div>");
             options.append("</div>");
+            nameIndex++;
         }
         
         return options.toString();
@@ -416,88 +409,28 @@ public class EnhancedChatServer {
                 ".url{background:#1f2937;padding:15px;border-radius:10px;margin:10px 0;word-break:break-all;font-family:monospace;font-size:14px}" +
                 ".btn{background:linear-gradient(90deg,#4f46e5,#06b6d4);color:white;padding:12px 24px;border:none;border-radius:10px;margin:10px;cursor:pointer;text-decoration:none;display:inline-block}" +
                 ".copy-btn{background:#059669;font-size:12px;padding:8px 16px}" +
-                ".qr{background:white;padding:20px;border-radius:15px;margin:20px 0}" +
                 "</style></head><body>" +
                 "<div class=\"container\">" +
-                "<h1>📱 Connect Your Phone</h1>" +
+                "<h1>Connect Your Phone</h1>" +
                 
                 "<div class=\"option\">" +
-                "<h3>1️⃣ Direct Link</h3>" +
+                "<h3>Direct Link</h3>" +
                 "<div class=\"url\">" + url + "</div>" +
                 "<button class=\"copy-btn\" onclick=\"navigator.clipboard.writeText('" + url + "')\">Copy URL</button>" +
                 "</div>" +
                 
                 "<div class=\"option\">" +
-                "<h3>2️⃣ QR Code</h3>" +
-                "<div class=\"qr\">" + generateQRCodeSVG(url) + "</div>" +
-                "<p>Scan with your phone's camera</p>" +
-                "</div>" +
-                
-                "<div class=\"option\">" +
-                "<h3>3️⃣ Manual Entry</h3>" +
+                "<h3>Manual Entry</h3>" +
                 "<p>Type this in your phone's browser:</p>" +
                 "<div class=\"url\">" + NETWORK_IP + ":3000</div>" +
                 "</div>" +
                 
-                "<a href=\"/\" class=\"btn\">🚀 Open Chat</a>" +
-                "<a href=\"/profile\" class=\"btn\">👤 Setup Profile</a>" +
-                "<a href=\"/settings\" class=\"btn\">⚙️ Settings</a>" +
+                "<a href=\"/\" class=\"btn\">Open Chat</a>" +
+                "<a href=\"/profile\" class=\"btn\">Setup Profile</a>" +
+                "<a href=\"/settings\" class=\"btn\">Settings</a>" +
                 "</div>" +
                 "</body></html>";
         writeText(out, 200, "OK", "text/html; charset=utf-8", html);
-    }
-
-    private static void serveQRCode(PrintWriter out) {
-        String url = "http://" + NETWORK_IP + ":" + WEB_PORT + "/";
-        String qrHtml = "" +
-                "<!doctype html>\n" +
-                "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
-                "<title>QR Code - LAN Chat</title>" +
-                "<style>body{font-family:sans-serif;margin:0;background:#0b1220;color:#e2e8f0;text-align:center;padding:20px}" +
-                ".container{max-width:400px;margin:0 auto;background:#1f2937;padding:30px;border-radius:20px}" +
-                "h1{color:#4f46e5;margin-bottom:20px}" +
-                ".qr{background:white;padding:20px;border-radius:15px;margin:20px 0}" +
-                ".url{background:#0b1220;padding:15px;border-radius:10px;margin:20px 0;word-break:break-all;font-family:monospace}" +
-                ".btn{background:linear-gradient(90deg,#4f46e5,#06b6d4);color:white;padding:12px 24px;border:none;border-radius:10px;margin:10px;cursor:pointer;text-decoration:none;display:inline-block}" +
-                "</style></head><body>" +
-                "<div class=\"container\">" +
-                "<h1>�� LAN Chat QR Code</h1>" +
-                "<div class=\"qr\">" +
-                generateQRCodeSVG(url) +
-                "</div>" +
-                "<div class=\"url\">" + url + "</div>" +
-                "<a href=\"/\" class=\"btn\">Open Chat</a>" +
-                "<a href=\"/connect\" class=\"btn\">More Options</a>" +
-                "</div>" +
-                "</body></html>";
-        writeText(out, 200, "OK", "text/html; charset=utf-8", qrHtml);
-    }
-
-    private static String generateQRCodeSVG(String text) {
-        StringBuilder qr = new StringBuilder();
-        qr.append("<svg width=\"200\" height=\"200\" viewBox=\"0 0 200 200\">");
-        
-        int size = 20;
-        int moduleSize = 200 / size;
-        
-        for (int y = 0; y < size; y++) {
-            for (int x = 0; x < size; x++) {
-                boolean isBlack = ((x + y + text.hashCode()) % 3 == 0) || 
-                                 (x == 0 || x == size-1 || y == 0 || y == size-1) ||
-                                 ((x < 7 && y < 7) || (x >= size-7 && y < 7) || (x < 7 && y >= size-7));
-                
-                if (isBlack) {
-                    qr.append("<rect x=\"").append(x * moduleSize)
-                      .append("\" y=\"").append(y * moduleSize)
-                      .append("\" width=\"").append(moduleSize)
-                      .append("\" height=\"").append(moduleSize)
-                      .append("\" fill=\"black\"/>");
-                }
-            }
-        }
-        
-        qr.append("</svg>");
-        return qr.toString();
     }
 
     private static void serveIndex(PrintWriter out) {
@@ -520,14 +453,18 @@ public class EnhancedChatServer {
                 "input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #334155;background:#0b1220;color:#e2e8f0}button{padding:12px 16px;border:0;background:linear-gradient(90deg,#4f46e5,#06b6d4);color:white;border-radius:12px;font-weight:600}" +
                 ".nav-link{color:#93c5fd;text-decoration:none;font-size:14px;font-weight:600;padding:8px 12px;border-radius:8px;background:#1f2937}" +
                 ".nav-link:hover{background:#334155}" +
+                ".emoji-btn{background:#334155;color:#e2e8f0;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;margin-left:8px}" +
+                ".emoji-picker{position:fixed;bottom:80px;right:20px;background:#1f2937;border:1px solid #334155;border-radius:12px;padding:15px;display:none;grid-template-columns:repeat(6,1fr);gap:8px;max-width:200px}" +
+                ".emoji-item{font-size:20px;cursor:pointer;padding:5px;border-radius:6px;text-align:center}" +
+                ".emoji-item:hover{background:#334155}" +
                 "</style></head><body>" +
                 "<div class=\"header\">" +
                 "<div class=\"wrap\" style=\"display:flex;justify-content:space-between;align-items:center;\">" +
                 "<div style=\"font-weight:700;font-size:18px\">LAN Chat</div>" +
                 "<div style=\"display:flex;gap:8px;\">" +
-                "<a href=\"/profile\" class=\"nav-link\">👤 Profile</a>" +
-                "<a href=\"/settings\" class=\"nav-link\">⚙️ Settings</a>" +
-                "<a href=\"/connect\" class=\"nav-link\">📱 Connect</a>" +
+                "<a href=\"/profile\" class=\"nav-link\">Profile</a>" +
+                "<a href=\"/settings\" class=\"nav-link\">Settings</a>" +
+                "<a href=\"/connect\" class=\"nav-link\">Connect</a>" +
                 "</div>" +
                 "</div>" +
                 "</div>" +
@@ -536,12 +473,16 @@ public class EnhancedChatServer {
                 "</div>" +
                 "<div class=\"inputbar\">" +
                 "  <input id=\"text\" placeholder=\"Type a message\" autocomplete=\"off\" />" +
+                "  <button class=\"emoji-btn\" onclick=\"toggleEmojiPicker()\">😀</button>" +
                 "  <button id=\"send\">Send</button>" +
+                "</div>" +
+                "<div class=\"emoji-picker\" id=\"emojiPicker\">" +
+                "😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😛😝😜🤪🤨🧐🤓😎🤩🥳😏😒😞😔😟😕🙁☹️😣😖😫😩🥺😢😭😤😠😡🤬🤯😳🥵🥶😱😨😰😥😓🤗🤔🤭🤫🤥😶😐😑😬🙄😯😦😧😮😲🥱😴🤤😪😵🤐🥴🤢🤮🤧😷🤒🤕🤑🤠😈👿👹👺🤡💩👻💀☠️👽👾🤖🎃😺😸😹😻😼😽🙀😿😾" +
                 "</div>" +
                 "<script>\n" +
                 "const log = document.getElementById('log');\n" +
-                "let userAvatar = null;" +
-                "let sessionId = 'session_' + Date.now();" +
+                "let userAvatar = null;\n" +
+                "let sessionId = 'session_' + Date.now();\n" +
                 "\n" +
                 "function add(sender,text,avatar=null){\n" +
                 "  const row=document.createElement('div');\n" +
@@ -602,10 +543,29 @@ public class EnhancedChatServer {
                 "  input.value='';\n" +
                 "}\n" +
                 "\n" +
+                "function toggleEmojiPicker() {\n" +
+                "  const picker = document.getElementById('emojiPicker');\n" +
+                "  picker.style.display = picker.style.display === 'none' ? 'grid' : 'none';\n" +
+                "}\n" +
+                "\n" +
+                "function addEmoji(emoji) {\n" +
+                "  input.value += emoji;\n" +
+                "  input.focus();\n" +
+                "  document.getElementById('emojiPicker').style.display = 'none';\n" +
+                "}\n" +
+                "\n" +
+                "document.addEventListener('DOMContentLoaded', function() {\n" +
+                "  const emojiItems = document.querySelectorAll('.emoji-item');\n" +
+                "  emojiItems.forEach(item => {\n" +
+                "    item.addEventListener('click', function() {\n" +
+                "      addEmoji(this.textContent);\n" +
+                "    });\n" +
+                "  });\n" +
+                "});\n" +
+                "\n" +
                 "btn.addEventListener('click',send);\n" +
                 "input.addEventListener('keydown',e=>{if(e.key==='Enter')send();});\n" +
                 "\n" +
-                "// Load user avatar if set\n" +
                 "window.onload = () => {\n" +
                 "  const savedAvatar = localStorage.getItem('userAvatar');\n" +
                 "  if(savedAvatar){\n" +
