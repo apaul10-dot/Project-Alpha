@@ -2,67 +2,217 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>AlphaChat - Phone to Desktop Messaging</title>
   <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <div class="container">
-    <div id="welcome-screen" class="screen active">
-      <h1>QR Chat</h1>
-      <div class="welcome-options">
-        <div class="option">
-          <h2>Create a Chat Room</h2>
-          <p>Generate a QR code for others to join your chat</p>
-          <button id="create-room-btn" class="btn primary">Create Room</button>
+  <div class="app-container">
+    <!-- Navigation Header -->
+    <nav class="navbar">
+      <div class="nav-brand">
+        <i class="fas fa-mobile-alt"></i>
+        <span>AlphaChat</span>
+      </div>
+      <div class="nav-links">
+        <a href="/profile" class="nav-link" title="Profile">
+          <i class="fas fa-user-circle"></i>
+        </a>
+        <a href="/settings" class="nav-link" title="Settings">
+          <i class="fas fa-cog"></i>
+        </a>
+        <a href="/connect" class="nav-link" title="Connect">
+          <i class="fas fa-wifi"></i>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Chat Interface -->
+    <div class="chat-container">
+      <!-- Welcome Screen -->
+      <div id="welcome-screen" class="screen active">
+        <div class="welcome-content">
+          <div class="welcome-header">
+            <div class="welcome-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <h1>Welcome to AlphaChat</h1>
+            <p>Seamlessly connect your phone to your desktop for instant messaging</p>
+          </div>
+          
+          <div class="welcome-options">
+            <div class="option-card primary">
+              <div class="option-icon">
+                <i class="fas fa-qrcode"></i>
+              </div>
+              <h3>Create Chat Room</h3>
+              <p>Generate a QR code for your phone to scan and join the chat</p>
+              <button id="create-room-btn" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Create Room
+              </button>
+            </div>
+            
+            <div class="option-card secondary">
+              <div class="option-icon">
+                <i class="fas fa-qr-code"></i>
+              </div>
+              <h3>Join Chat Room</h3>
+              <p>Scan a QR code to join an existing chat session</p>
+              <button id="join-room-btn" class="btn btn-secondary">
+                <i class="fas fa-camera"></i>
+                Scan QR Code
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="option">
-          <h2>Join a Chat Room</h2>
-          <p>Scan a QR code to join an existing chat</p>
-          <button id="join-room-btn" class="btn secondary">Scan QR Code</button>
+      </div>
+
+      <!-- QR Code Screen -->
+      <div id="qr-screen" class="screen">
+        <div class="qr-content">
+          <div class="qr-header">
+            <h2>Share this QR Code</h2>
+            <p>Scan this code with your phone to join the chat</p>
+          </div>
+          
+          <div class="qr-container">
+            <div id="qr-code" class="qr-code-wrapper">
+              <!-- QR code will be generated here -->
+            </div>
+            <div id="session-info" class="session-info">
+              <!-- Session info will be displayed here -->
+            </div>
+          </div>
+          
+          <div class="qr-actions">
+            <button id="enter-chat-btn" class="btn btn-primary">
+              <i class="fas fa-comments"></i>
+              Enter Chat
+            </button>
+            <button id="back-from-qr-btn" class="btn btn-outline">
+              <i class="fas fa-arrow-left"></i>
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR Scanner Screen -->
+      <div id="scanner-screen" class="screen">
+        <div class="scanner-content">
+          <div class="scanner-header">
+            <h2>Scan QR Code</h2>
+            <p>Point your camera at a QR code to join the chat</p>
+          </div>
+          
+          <div class="scanner-container">
+            <div id="qr-reader" class="qr-reader">
+              <!-- QR scanner will be initialized here -->
+            </div>
+          </div>
+          
+          <div class="scanner-actions">
+            <button id="back-from-scanner-btn" class="btn btn-outline">
+              <i class="fas fa-arrow-left"></i>
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Username Screen -->
+      <div id="username-screen" class="screen">
+        <div class="username-content">
+          <div class="username-header">
+            <h2>Enter Your Username</h2>
+            <p>Choose a display name for the chat</p>
+          </div>
+          
+          <div class="username-form">
+            <div class="input-group">
+              <i class="fas fa-user"></i>
+              <input type="text" id="username-input" placeholder="Enter your username" maxlength="20">
+            </div>
+            <button id="join-chat-btn" class="btn btn-primary">
+              <i class="fas fa-sign-in-alt"></i>
+              Join Chat
+            </button>
+          </div>
+          
+          <div class="username-actions">
+            <button id="back-from-username-btn" class="btn btn-outline">
+              <i class="fas fa-arrow-left"></i>
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Screen -->
+      <div id="chat-screen" class="screen">
+        <div class="chat-header">
+          <div class="chat-info">
+            <h3>AlphaChat</h3>
+            <div class="connection-status">
+              <i class="fas fa-circle status-indicator"></i>
+              <span id="users-count">1 user online</span>
+            </div>
+          </div>
+          <button id="leave-chat-btn" class="btn btn-outline small">
+            <i class="fas fa-sign-out-alt"></i>
+            Leave
+          </button>
+        </div>
+        
+        <div id="messages-container" class="messages-container">
+          <!-- Messages will be displayed here -->
+        </div>
+        
+        <div class="message-input-container">
+          <div class="message-input">
+            <button id="emoji-btn" class="emoji-btn" title="Add Emoji">
+              <i class="fas fa-smile"></i>
+            </button>
+            <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+            <button id="send-btn" class="btn btn-primary">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+          
+          <!-- Emoji Picker -->
+          <div id="emoji-picker" class="emoji-picker">
+            <div class="emoji-categories">
+              <button class="emoji-category active" data-category="smileys">😀</button>
+              <button class="emoji-category" data-category="people">👋</button>
+              <button class="emoji-category" data-category="nature">🌱</button>
+              <button class="emoji-category" data-category="food">🍕</button>
+              <button class="emoji-category" data-category="activity">⚽</button>
+              <button class="emoji-category" data-category="travel">✈️</button>
+              <button class="emoji-category" data-category="objects">💡</button>
+              <button class="emoji-category" data-category="symbols">❤️</button>
+            </div>
+            <div class="emoji-grid" id="emoji-grid">
+              <!-- Emojis will be populated here -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div id="qr-screen" class="screen">
-      <h1>Share this QR Code</h1>
-      <div id="qr-container">
-        <div id="qr-code"></div>
-        <p id="session-info"></p>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Connecting...</p>
       </div>
-      <button id="enter-chat-btn" class="btn primary">Enter Chat</button>
-      <button id="back-from-qr-btn" class="btn secondary">Back</button>
     </div>
 
-    <div id="scanner-screen" class="screen">
-      <h1>Scan QR Code</h1>
-      <div id="scanner-container">
-        <div id="qr-reader"></div>
-      </div>
-      <button id="back-from-scanner-btn" class="btn secondary">Back</button>
-    </div>
-
-    <div id="username-screen" class="screen">
-      <h1>Enter Your Username</h1>
-      <div class="form-group">
-        <input type="text" id="username-input" placeholder="Username" maxlength="20">
-        <button id="join-chat-btn" class="btn primary">Join Chat</button>
-      </div>
-      <button id="back-from-username-btn" class="btn secondary">Back</button>
-    </div>
-
-    <div id="chat-screen" class="screen">
-      <div class="chat-header">
-        <h2>Chat Room</h2>
-        <p id="users-count">Users: 1</p>
-        <button id="leave-chat-btn" class="btn secondary small">Leave</button>
-      </div>
-      <div id="messages-container"></div>
-      <div class="message-input">
-        <input type="text" id="message-input" placeholder="Type a message...">
-        <button id="send-btn" class="btn primary">Send</button>
-      </div>
-    </div>
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
