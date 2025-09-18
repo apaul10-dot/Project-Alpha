@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Chat</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div id="welcome-screen" class="screen active">
+      <h1>QR Chat</h1>
+      <div class="welcome-options">
+        <div class="option">
+          <h2>Create a Chat Room</h2>
+          <p>Generate a QR code for others to join your chat</p>
+          <button id="create-room-btn" class="btn primary">Create Room</button>
+        </div>
+        <div class="option">
+          <h2>Join a Chat Room</h2>
+          <p>Scan a QR code to join an existing chat</p>
+          <button id="join-room-btn" class="btn secondary">Scan QR Code</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="qr-screen" class="screen">
+      <h1>Share this QR Code</h1>
+      <div id="qr-container">
+        <div id="qr-code"></div>
+        <p id="session-info"></p>
+      </div>
+      <button id="enter-chat-btn" class="btn primary">Enter Chat</button>
+      <button id="back-from-qr-btn" class="btn secondary">Back</button>
+    </div>
+
+    <div id="scanner-screen" class="screen">
+      <h1>Scan QR Code</h1>
+      <div id="scanner-container">
+        <div id="qr-reader"></div>
+      </div>
+      <button id="back-from-scanner-btn" class="btn secondary">Back</button>
+    </div>
+
+    <div id="username-screen" class="screen">
+      <h1>Enter Your Username</h1>
+      <div class="form-group">
+        <input type="text" id="username-input" placeholder="Username" maxlength="20">
+        <button id="join-chat-btn" class="btn primary">Join Chat</button>
+      </div>
+      <button id="back-from-username-btn" class="btn secondary">Back</button>
+    </div>
+
+    <div id="chat-screen" class="screen">
+      <div class="chat-header">
+        <h2>Chat Room</h2>
+        <p id="users-count">Users: 1</p>
+        <button id="leave-chat-btn" class="btn secondary small">Leave</button>
+      </div>
+      <div id="messages-container"></div>
+      <div class="message-input">
+        <input type="text" id="message-input" placeholder="Type a message...">
+        <button id="send-btn" class="btn primary">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,27 +1,6 @@
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-
 import java.io.*;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.net.URLDecoder;
-import java.net.URI;
-import java.awt.Desktop;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,179 +11,58 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class Main extends Application {
-
+public class ChatServer {
     private static final int WEB_PORT = 3000;
+    private static final List<PrintWriter> sseClients = new CopyOnWriteArrayList<>();
+    private static final List<String> messageHistory = new CopyOnWriteArrayList<>();
+    private static ServerSocket httpServerSocket;
 
-    private BorderPane root;
-    private VBox chatMessages;
-    private ScrollPane scrollPane;
-    private boolean darkMode = true;
-
-    // SSE client connections (writers kept open)
-    private final List<PrintWriter> sseClients = new CopyOnWriteArrayList<>();
-
-    private ServerSocket httpServerSocket;
-
-    @Override
-    public void start(Stage primaryStage) {
-        root = new BorderPane();
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f172a, #111827);");
-
-        // UI
-        VBox chatLayout = new VBox(10);
-        chatLayout.setPadding(new Insets(10));
-        chatLayout.setStyle("-fx-background-color: transparent;");
-        chatMessages = new VBox(8);
-        chatMessages.setFillWidth(true);
-        scrollPane = new ScrollPane(chatMessages);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
-
-        TextField input = new TextField();
-        input.setPromptText("Type a message");
-c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b1220; -fx-text-fill: white; -fx-border-color: #334155; -fx-border-radius: 12; -fx-prompt-text-fill: #94a3b8;");
-        Button sendBtn = new Button("Send");
-        sendBtn.setStyle(primaryButtonStyle());
-        sendBtn.setOnAction(e -> {
-            String text = input.getText().trim();
-            if (!text.isEmpty()) {
-                addMessage("You", text);
-                broadcastEvent("desktop", text);
-                input.clear();
-            }
-        });
-        HBox.setHgrow(input, Priority.ALWAYS);
-        HBox inputBar = new HBox(8, input, sendBtn);
-        inputBar.setPadding(new Insets(8, 0, 0, 0));
-        chatLayout.getChildren().addAll(scrollPane, inputBar);
-        root.setCenter(chatLayout);
-
-        // Header with connection info + actions
+    public static void main(String[] args) {
+        System.out.println("🚀 Starting LAN Chat Server...");
+        
         String url = "http://" + getLocalIpAddress() + ":" + WEB_PORT + "/";
-        Label title = new Label("LAN Chat");
-        title.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
-        Label info = new Label(url);
-        info.setStyle("-fx-text-fill: #93c5fd; -fx-font-size: 12px;");
-
-        Button copyBtn = new Button("Copy Link");
-        copyBtn.setStyle(secondaryButtonStyle());
-        copyBtn.setOnAction(e -> {
-            ClipboardContent content = new ClipboardContent();
-            content.putString(url);
-            Clipboard.getSystemClipboard().setContent(content);
-            addSystem("Copied link to clipboard");
-        });
-
-        Button openBtn = new Button("Open");
-        openBtn.setStyle(secondaryButtonStyle());
-        openBtn.setOnAction(e -> {
-            try { if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(new URI(url)); } catch (Exception ignored) {}
-        });
-
-        Button themeBtn = new Button("Theme");
-        themeBtn.setStyle(secondaryButtonStyle());
-        themeBtn.setOnAction(e -> toggleTheme());
-
-        HBox spacer = new HBox();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox topBar = new HBox(12, title, info, spacer, copyBtn, openBtn, themeBtn);
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(12));
-        topBar.setStyle("-fx-background-color: rgba(15,23,42,0.8); -fx-border-color: #1f2937; -fx-border-width: 0 0 1 0;");
-        root.setTop(topBar);
-
-        Scene scene = new Scene(root, 460, 720);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("LAN Chat (Desktop ↔ Phone)");
-        primaryStage.show();
-
+        System.out.println("📱 Open this URL on your phone: " + url);
+        System.out.println("💬 Messages will appear here when sent from phone");
+        System.out.println("�� Copy this URL: " + url);
+        System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        
         // Start HTTP server
         startHttpServer();
-
-        Platform.runLater(() -> addSystem("Server running at " + url));
-    }
-
-    private String primaryButtonStyle() {
-        return "-fx-background-color: linear-gradient(to right, #4f46e5, #06b6d4); -fx-text-fill: white; -fx-background-radius: 12; -fx-font-weight: bold;" +
-               "-fx-padding: 8 14 8 14; -fx-border-color: transparent;";
-    }
-
-    private String secondaryButtonStyle() {
-        return "-fx-background-color: #0b1220; -fx-text-fill: #e2e8f0; -fx-background-radius: 10; -fx-border-color: #334155; -fx-border-radius: 10; -fx-padding: 6 10 6 10;";
-    }
-
-    private void toggleTheme() {
-        darkMode = !darkMode;
-        if (darkMode) {
-            root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f172a, #111827);");
-        } else {
-            root.setStyle("-fx-background-color: linear-gradient(to bottom, #ffffff, #f8fafc);");
+        
+        // Keep the main thread alive
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            System.out.println("Server stopped.");
         }
     }
 
-    private void addSystem(String text) {
-        addMessage("System", text);
-    }
-
-    private void addMessage(String sender, String text) {
+    private static void addMessage(String sender, String text) {
         String time = new SimpleDateFormat("HH:mm").format(new Date());
-        boolean sentByYou = "You".equals(sender);
-        boolean isSystem = "System".equals(sender);
-
-        HBox row = new HBox();
-        row.setMaxWidth(Double.MAX_VALUE);
-        row.setPadding(new Insets(2, 0, 2, 0));
-
-        VBox bubbleBox = new VBox(2);
-        Label meta = new Label((isSystem ? "" : (sentByYou ? "You" : sender)) + (isSystem ? "" : ("  •  " + time)));
-        meta.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 10px;");
-        Label bubble = new Label(text);
-        bubble.setWrapText(true);
-        bubble.setMaxWidth(320);
-        bubble.setPadding(new Insets(8, 12, 8, 12));
-        bubble.setStyle(isSystem
-                ? "-fx-text-fill: #94a3b8;"
-                : sentByYou
-                    ? "-fx-background-color: linear-gradient(to right, #4f46e5, #06b6d4); -fx-text-fill: white; -fx-background-radius: 14;"
-                    : "-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-background-radius: 14;");
-
-        bubbleBox.getChildren().addAll(meta, bubble);
-
-        if (isSystem) {
-            row.setAlignment(Pos.CENTER);
-            row.getChildren().add(bubbleBox);
-        } else if (sentByYou) {
-            row.setAlignment(Pos.CENTER_RIGHT);
-            row.getChildren().add(bubbleBox);
-        } else {
-            row.setAlignment(Pos.CENTER_LEFT);
-            row.getChildren().add(bubbleBox);
-        }
-
-        chatMessages.getChildren().add(row);
-        Platform.runLater(() -> scrollPane.setVvalue(1.0));
+        String message = "[" + time + "] " + sender + ": " + text;
+        messageHistory.add(message);
+        System.out.println(message);
     }
 
-    private void startHttpServer() {
+    private static void startHttpServer() {
         Thread serverThread = new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(WEB_PORT)) {
                 httpServerSocket = serverSocket;
+                System.out.println("✅ Server running on port " + WEB_PORT);
+                
                 while (true) {
                     Socket client = serverSocket.accept();
                     new Thread(() -> handleHttpConnection(client), "http-" + client.getPort()).start();
                 }
             } catch (IOException e) {
-                Platform.runLater(() -> addSystem("HTTP server stopped: " + e.getMessage()));
+                System.err.println("❌ HTTP server error: " + e.getMessage());
             }
         }, "http-server");
         serverThread.setDaemon(true);
         serverThread.start();
     }
 
-    private void handleHttpConnection(Socket socket) {
+    private static void handleHttpConnection(Socket socket) {
         try (BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
              OutputStream rawOut = socket.getOutputStream();
              PrintWriter out = new PrintWriter(new OutputStreamWriter(rawOut, StandardCharsets.UTF_8), true)) {
@@ -237,8 +95,7 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
                 if (text == null) text = "";
                 String decoded = urlDecode(text);
                 if (!decoded.isEmpty()) {
-                    String finalDecoded = decoded;
-                    Platform.runLater(() -> addMessage("Phone", finalDecoded));
+                    addMessage("Phone", decoded);
                     broadcastEvent("phone", decoded);
                 }
                 writeNoContent(out);
@@ -253,7 +110,7 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
         }
     }
 
-    private void serveIndex(PrintWriter out) {
+    private static void serveIndex(PrintWriter out) {
         String html = "" +
                 "<!doctype html>\n" +
                 "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">" +
@@ -294,7 +151,7 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
         writeText(out, 200, "OK", "text/html; charset=utf-8", html);
     }
 
-    private void handleSse(OutputStream rawOut, PrintWriter headerOut) {
+    private static void handleSse(OutputStream rawOut, PrintWriter headerOut) {
         // Write SSE headers
         headerOut.print("HTTP/1.1 200 OK\r\n");
         headerOut.print("Content-Type: text/event-stream\r\n");
@@ -308,7 +165,7 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
         sendSse(eventWriter, "{\"sender\":\"system\",\"text\":\"connected\"}");
     }
 
-    private void broadcastEvent(String sender, String text) {
+    private static void broadcastEvent(String sender, String text) {
         String json = "{\"sender\":\"" + escapeJson(sender) + "\",\"text\":\"" + escapeJson(text) + "\"}";
         // Remove dead clients while iterating
         Iterator<PrintWriter> it = sseClients.iterator();
@@ -320,7 +177,7 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
         }
     }
 
-    private boolean sendSse(PrintWriter w, String data) {
+    private static boolean sendSse(PrintWriter w, String data) {
         try {
             w.print("data: ");
             w.print(data);
@@ -427,19 +284,5 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
             }
         }
         return sb.toString();
-    }
-
-    @Override
-    public void stop() {
-        // Close SSE clients
-        for (PrintWriter w : sseClients) {
-            try { w.close(); } catch (Exception ignored) {}
-        }
-        sseClients.clear();
-        try { if (httpServerSocket != null) httpServerSocket.close(); } catch (IOException ignored) {}
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

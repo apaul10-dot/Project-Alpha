@@ -65,7 +65,7 @@ public class Main extends Application {
 
         TextField input = new TextField();
         input.setPromptText("Type a message");
-c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b1220; -fx-text-fill: white; -fx-border-color: #334155; -fx-border-radius: 12; -fx-prompt-text-fill: #94a3b8;");
+        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b1220; -fx-text-fill: white; -fx-border-color: #334155; -fx-border-radius: 12; -fx-prompt-text-fill: #94a3b8;");
         Button sendBtn = new Button("Send");
         sendBtn.setStyle(primaryButtonStyle());
         sendBtn.setOnAction(e -> {
@@ -256,8 +256,8 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
     private void serveIndex(PrintWriter out) {
         String html = "" +
                 "<!doctype html>\n" +
-                "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">" +
-                "<meta name=\"theme-color\" content=\"#0b1220\">" +
+                "<html><head><meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1, viewport-fit=cover\\">" +
+                "<meta name=\\"theme-color\\" content=\\"#0b1220\\">" +
                 "<title>LAN Chat</title>" +
                 "<style>body{font-family:-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;margin:0;background:#0b1220;color:#e2e8f0}" +
                 ".wrap{max-width:680px;margin:0 auto;padding:16px}" +
@@ -270,13 +270,13 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
                 ".inputbar{position:sticky;bottom:0;background:#0b1220e6;padding:12px;border-top:1px solid #1f2937;display:flex;gap:8px;backdrop-filter:saturate(140%) blur(6px)}" +
                 "input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #334155;background:#0b1220;color:#e2e8f0}button{padding:12px 16px;border:0;background:linear-gradient(90deg,#4f46e5,#06b6d4);color:white;border-radius:12px;font-weight:600}" +
                 "</style></head><body>" +
-                "<div class=\"header\"><div class=\"wrap\"><div style=\"font-weight:700;font-size:18px\">LAN Chat</div><div style=\"font-size:12px;color:#93c5fd\">Connected to desktop</div></div></div>" +
-                "<div class=\"wrap\" id=\"wrap\">" +
-                "  <div id=\"log\"></div>" +
+                "<div class=\\"header\\"><div class=\\"wrap\\"><div style=\\"font-weight:700;font-size:18px\\">LAN Chat</div><div style=\\"font-size:12px;color:#93c5fd\\">Connected to desktop</div></div></div>" +
+                "<div class=\\"wrap\\" id=\\"wrap\\">" +
+                "  <div id=\\"log\\"></div>" +
                 "</div>" +
-                "<div class=\"inputbar\">" +
-                "  <input id=\"text\" placeholder=\"Type a message\" autocomplete=\"off\" />" +
-                "  <button id=\"send\">Send</button>" +
+                "<div class=\\"inputbar\\">" +
+                "  <input id=\\"text\\" placeholder=\\"Type a message\\" autocomplete=\\"off\\" />" +
+                "  <button id=\\"send\\">Send</button>" +
                 "</div>" +
                 "<script>\n" +
                 "const log = document.getElementById('log');\n" +
@@ -442,4 +442,4 @@ c        input.setStyle("-fx-background-radius: 12; -fx-background-color: #0b122
     public static void main(String[] args) {
         launch(args);
     }
-}
+} 
